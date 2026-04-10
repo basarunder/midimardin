@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDI MARDIN</title>
+    <style>
+        /* Basic Resets & Vanilla Layout */
+        *, *:before, *:after { box-sizing: border-box; }
+        html, body {
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            background-color: #050505;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            user-select: none;
+            touch-action: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        /* Restored Peugeot Claw Aesthetic */
+        .headlight-bar {
+            flex: 1;
+            height: 180px;
+            background: rgba(255, 255, 255, 0.15); /* Slightly darker/transparent rest state */
+            border-radius: 6px;
+            transition: background 0.15s ease-out, box-shadow 0.1s ease-out, transform 0.1s ease-out;
+            cursor: pointer;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8), 0 0 10px rgba(255, 255, 255, 0.05); /* Inset shadow gives depth */
+            border: 1px solid rgba(255,255,255,0.1);
+            max-width: 32px;
+            margin: 0 auto;
+        }
+
+        .bar-left { transform: skewX(-4deg); }
+        .bar-right { transform: skewX(4deg); }
+        .bar-center { transform: skewX(0deg); }
+
+        .headlight-bar.active {
+            background: #ffffff;
+            box-shadow: 0 0 35px #ffffff, 0 0 70px rgba(255, 255, 255, 0.8), inset 0 0 10px #ffffff;
+        }
+        
+        /* Popping out when active */
+        .bar-left.active { transform: scale(1.05) skewX(-4deg); z-index:10; }
+        .bar-right.active { transform: scale(1.05) skewX(4deg); z-index:10; }
+        .bar-center.active { transform: scale(1.05) skewX(0deg); z-index:10; }
+
+        /* Controls */
+        .control-group { display: flex; gap: 0.75rem; }
+        
+        .control-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.6);
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-weight: 300;
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            border-radius: 9999px; /* Pill shape */
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+        }
+        
+        .control-btn:active, .control-btn.active {
+            border-color: #ffffff;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+        
+        #genBtn { border-color: rgba(255,255,255,0.4); font-weight: 600; color: #ffffff; }
+
+        .bottom-controls {
+            width: 100%; height: 80px; display: flex; justify-content: space-between; align-items: center;
+            background-color: #000000; border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 0 1.5rem;
+        }
+
+        .tempo-group { display: flex; flex-direction: column; align-items: center; flex: 1; margin: 0 2rem; max-width: 250px; }
+        .tempo-group label { font-size: 0.6rem; color: #6b7280; letter-spacing: 0.2em; margin-bottom: 0.5rem; text-transform: uppercase; font-weight: bold; }
+        .tempo-group span { color: #ffffff; }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+            width: 100%;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #333;
+            border-radius: 2px;
+        }
+
+        #overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #overlay h1 {
+            font-size: 2.25rem; font-weight: 300; letter-spacing: 0.1em;
+            margin: 0 0 2.5rem 0; color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        #start-btn {
+            padding: 0.75rem 2rem; border: 1px solid #ffffff; color: #ffffff;
+            background: transparent; transition: all 0.3s; letter-spacing: 0.05em;
+            font-weight: 700; cursor: pointer; font-size: 1rem;
+        }
+        
+        #start-btn:hover { background: #ffffff; color: #000000; }
+        
+        #keyboard-container {
+            width: 100%; flex: 1; display: flex; align-items: center; justify-content: center;
+            gap: 0.5rem; margin-top: 1rem; padding: 0 1rem;
+        }
+
+        /* Password Input Styling */
+        #password-input {
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            text-align: center;
+            font-size: 1rem;
+            outline: none;
+            border-radius: 4px;
+            letter-spacing: 0.1em;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.3s;
+        }
+        #password-input:focus {
+            border-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="overlay">
+        <h1>MIDI MARDIN</h1>
+        <div id="login-container" style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem;">
+            <input type="password" id="password-input" placeholder="ENTER ACCESS CODE">
+            <button id="start-btn">START EXPERIENCE</button>
+            <p id="error-msg" style="color: #ff4444; font-size: 0.8rem; display: none; margin: 0; letter-spacing: 0.05em; text-transform: uppercase;">Incorrect access code</p>
+        </div>
+    </div>
+
+    <!-- Main Center: Keyboard -->
+    <div id="keyboard-container">
+        <!-- Generated by JS -->
+    </div>
+
+    <!-- Bottom Row: Controls -->
+    <div class="bottom-controls">
+        
+        <div class="control-group">
+            <button id="playBtn" class="control-btn">PLAY</button>
+            <button id="stopBtn" class="control-btn">STOP</button>
+            <button id="genBtn" class="control-btn" id="genBtn">GENERATE</button>
+        </div>
+
+        <div class="tempo-group">
+            <label>TEMPO: <span id="bpmValue">100</span></label>
+            <input type="range" id="bpmSlider" min="50" max="160" value="100">
+        </div>
+
+        <div class="control-group">
+            <button id="delayBtn" class="control-btn active">DELAY</button>
+            <button id="reverbBtn" class="control-btn">REVERB</button>
+            <button id="drumsBtn" class="control-btn active">DRUMS</button>
+        </div>
+    </div>
+
+    <script>
+        // MARDIN SEQUENCER LOGIC AND ADAPTATION
+        const MAKAMLAR_AEU = {
+            "Hüseyni": [0, 9, 13, 22, 31, 35, 44],
+            "Uşşak": [0, 8, 13, 22, 31, 35, 44],
+            "Kürdi": [0, 4, 13, 22, 31, 35, 44],
+            "Saba": [0, 8, 13, 18, 31, 35, 44],
+            "Rast": [0, 9, 17, 22, 31, 40, 48],
+            "Hicaz": [0, 5, 17, 22, 31, 35, 44],
+            "Nikriz": [0, 9, 13, 25, 31, 40, 44],
+            "Nihavend": [0, 9, 13, 22, 31, 35, 47],
+        };
+
+        const MAKAM_FEATURES = {
+            "Hüseyni": { karar: 0, guclu: 4, initial: 4, contour: "inici_cikici" },
+            "Uşşak": { karar: 0, guclu: 3, initial: 0, contour: "cikici" },
+            "Kürdi": { karar: 0, guclu: 3, initial: 0, contour: "cikici" },
+            "Saba": { karar: 0, guclu: 3, initial: 2, contour: "cikici" },
+            "Rast": { karar: 0, guclu: 3, initial: 0, contour: "cikici" },
+            "Hicaz": { karar: 0, guclu: 3, initial: 3, contour: "inici_cikici" },
+            "Nikriz": { karar: 0, guclu: 3, initial: 0, contour: "inici_cikici" },
+            "Nihavend": { karar: 0, guclu: 3, initial: 3, contour: "inici" },
+        };
+
+        const USULLER = {
+            "sofyan": { len: 8, weights: [2.0, 0.5, 1.2, 0.5, 1.5, 0.5, 1.0, 0.5], map: ['D', 't', 'T', 't', 'D', 't', 'T', 't'], minBpm: 80, maxBpm: 140 },
+            "duyek": { len: 8, weights: [2.0, 0.5, 1.0, 1.0, 1.5, 0.5, 1.0, 1.0], map: ['D', 't', 'T', 't', 'D', 't', 'T', 't'], minBpm: 70, maxBpm: 110 },
+            "aksak": { len: 9, weights: [2.0, 0.5, 1.2, 0.5, 1.5, 0.5, 1.0, 1.0, 0.8], map: ['D', 't', 'T', 't', 'D', 't', 'T', 'T', 't'], minBpm: 90, maxBpm: 130 },
+            "oynak": { len: 9, weights: [2.0, 0.5, 1.5, 2.0, 0.5, 1.5, 1.0, 1.0, 0.5], map: ['D', 't', 'T', 'D', 't', 'T', 't', 't', 't'], minBpm: 110, maxBpm: 150 }
+        };
+
+        const MEYAN_MAPPING = {
+            "Hüseyni": "Hüseyni", "Uşşak": "Hüseyni", "Kürdi": "Nihavend", "Saba": "Hicaz", 
+            "Rast": "Nikriz", "Hicaz": "Hicaz", "Nikriz": "Rast", "Nihavend": "Kürdi"
+        };
+
+        const SCALE_LENGTH = 15;
+        const MAX_STEPS = 32;
+
+        const blocks = {
+            'A': { numSteps: 32, steps: Array(MAX_STEPS).fill().map(() => ({ active: false, degree: 0, glide: false })), makam: 'Hüseyni', usul: 'sofyan', seyir: 'otomatik', octaveShift: false },
+            'B': { numSteps: 32, steps: Array(MAX_STEPS).fill().map(() => ({ active: false, degree: 0, glide: false })), makam: 'Hüseyni', usul: 'sofyan', seyir: 'inici', octaveShift: false },
+            'B2': { numSteps: 32, steps: Array(MAX_STEPS).fill().map(() => ({ active: false, degree: 0, glide: false })), makam: 'Hüseyni', usul: 'sofyan', seyir: 'inici', octaveShift: false },
+            'C': { numSteps: 32, steps: Array(MAX_STEPS).fill().map(() => ({ active: false, degree: 0, glide: false })), makam: 'Uşşak', usul: 'sofyan', seyir: 'inici_cikici', octaveShift: true }
+        };
+
+        const formStructure = ['A', 'B', 'A', 'B2', 'C', 'C', 'A', 'B2'];
+        let playbackFormIndex = 0;
+        let playbackStepIndex = 0;
+        let nextNoteTime = 0;
+        let timerID;
+
+        let isPlaying = false;
+        let bpm = 100;
+        let isDelayOn = true;
+        let isReverbOn = false;
+        let isDrumsOn = true;
+
+        let audioCtx, masterGain, delayNode, delayFeedback, delayInputGain, reverbNode, reverbInputGain, noiseBuffer;
+        let keysElements = [];
+
+        // Audio Setup
+        function initAudio() {
+            if (audioCtx) {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                return;
+            }
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const nLen = audioCtx.sampleRate * 0.1;
+            noiseBuffer = audioCtx.createBuffer(1, nLen, audioCtx.sampleRate);
+            const nd = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < nLen; i++) nd[i] = Math.random() * 2 - 1;
+            
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.6;
+
+            const limiter = audioCtx.createDynamicsCompressor();
+            limiter.threshold.setValueAtTime(-1.0, audioCtx.currentTime);
+            limiter.knee.setValueAtTime(0, audioCtx.currentTime);        
+            limiter.ratio.setValueAtTime(20.0, audioCtx.currentTime);    
+            limiter.attack.setValueAtTime(0.001, audioCtx.currentTime);  
+            limiter.release.setValueAtTime(0.05, audioCtx.currentTime);  
+
+            masterGain.connect(limiter);
+            limiter.connect(audioCtx.destination);
+            
+            delayInputGain = audioCtx.createGain();
+            delayInputGain.gain.value = isDelayOn ? 1 : 0;
+            delayNode = audioCtx.createDelay();
+            delayFeedback = audioCtx.createGain();
+            delayNode.delayTime.value = (60 / bpm) * 0.75;
+            delayFeedback.gain.value = 0.35;
+            delayInputGain.connect(delayNode);
+            delayNode.connect(delayFeedback);
+            delayFeedback.connect(delayNode);
+            delayNode.connect(masterGain);
+            
+            reverbInputGain = audioCtx.createGain();
+            reverbInputGain.gain.value = isReverbOn ? 1 : 0;
+            reverbNode = audioCtx.createConvolver();
+            const irLen = audioCtx.sampleRate * 2.5;
+            const ir = audioCtx.createBuffer(2, irLen, audioCtx.sampleRate);
+            for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < irLen; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.8)); }
+            reverbNode.buffer = ir;
+            reverbInputGain.connect(reverbNode);
+            reverbNode.connect(masterGain);
+        }
+
+        function getPitchData(degree, makam, octaveShift) {
+            const oct = Math.floor(degree / 7) + (octaveShift ? 1 : 0);
+            const idx = degree % 7;
+            const centsFromRoot = MAKAMLAR_AEU[makam][idx] * (1200 / 53) + (oct * 1200);
+            const exactMidi = 45 + (centsFromRoot / 100);
+            return { freq: 440 * Math.pow(2, (exactMidi - 69) / 12), midiNote: Math.round(exactMidi) };
+        }
+
+        function playPluck(freq, time, userTriggered=false) {
+            if(!audioCtx) return;
+            const detune = (Math.random() * 6 - 3);
+            const aFreq = freq * Math.pow(2, detune / 1200);
+            const noise = audioCtx.createBufferSource(); noise.buffer = noiseBuffer;
+            const nG = audioCtx.createGain(); const nF = audioCtx.createBiquadFilter();
+            nF.type = 'lowpass'; nF.frequency.setValueAtTime(6000, time);
+            nG.gain.setValueAtTime(0, time); nG.gain.linearRampToValueAtTime(8.0, time + 0.001);
+            nG.gain.exponentialRampToValueAtTime(0.001, time + 0.03);
+            noise.connect(nF); nF.connect(nG);
+            const modes = [1, 2, 3, 4, 5, 6];
+            const mRG = audioCtx.createGain(); 
+            // increase gain if user triggered to stand out
+            mRG.gain.setValueAtTime(userTriggered ? 8.0 : 5.0, time);
+            mRG.connect(masterGain); mRG.connect(delayInputGain); mRG.connect(reverbInputGain);
+            modes.forEach((ratio, idx) => {
+                const res = audioCtx.createBiquadFilter(); res.type = 'bandpass';
+                res.Q.value = 120 + (Math.random() * 20 - 10);
+                res.frequency.setValueAtTime(aFreq * ratio, time);
+                const rG = audioCtx.createGain(); const decay = 1.0 / (idx * 0.6 + 1);
+                rG.gain.setValueAtTime(0, time); rG.gain.linearRampToValueAtTime(1.0 / (idx * 0.5 + 1), time + 0.005);
+                rG.gain.exponentialRampToValueAtTime(0.001, time + decay);
+                nG.connect(res); res.connect(rG); rG.connect(mRG);
+            });
+            noise.start(time);
+        }
+
+        function playPad(freq, time) {
+            if(!audioCtx) return;
+            const detune = (Math.random() * 6 - 3);
+            const aFreq = freq * Math.pow(2, detune / 1200);
+            
+            const noise = audioCtx.createBufferSource(); 
+            noise.buffer = noiseBuffer;
+            noise.loop = true; // Looping for continuous pad sound
+            
+            const nG = audioCtx.createGain(); 
+            const nF = audioCtx.createBiquadFilter();
+            nF.type = 'lowpass'; 
+            nF.frequency.setValueAtTime(3000, time);
+            
+            const attackTime = 0.8;
+            const releaseTime = 2.5;
+
+            nG.gain.setValueAtTime(0, time); 
+            nG.gain.linearRampToValueAtTime(1.5, time + attackTime);
+            nG.gain.setTargetAtTime(0, time + attackTime, releaseTime / 3);
+            
+            noise.connect(nF); 
+            nF.connect(nG);
+            
+            const modes = [1, 2, 3, 4, 5, 6];
+            const mRG = audioCtx.createGain(); 
+            mRG.gain.setValueAtTime(3.0, time); // Reduced Pad volume (was 10.0)
+            mRG.connect(masterGain); 
+            mRG.connect(delayInputGain); 
+            mRG.connect(reverbInputGain);
+            
+            modes.forEach((ratio, idx) => {
+                const res = audioCtx.createBiquadFilter(); 
+                res.type = 'bandpass';
+                res.Q.value = 140 + (Math.random() * 20); // High resonance for bowed/pad feel
+                res.frequency.setValueAtTime(aFreq * ratio, time);
+                
+                const rG = audioCtx.createGain(); 
+                rG.gain.setValueAtTime(1.0 / (idx * 0.8 + 1), time); 
+                
+                nG.connect(res); 
+                res.connect(rG); 
+                rG.connect(mRG);
+            });
+            
+            noise.start(time);
+            noise.stop(time + attackTime + releaseTime * 2);
+        }
+
+        function playDrum(type, time) {
+            if (!isDrumsOn || !audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            if (type === 'D') {
+                osc.frequency.setValueAtTime(60, time);
+                osc.frequency.exponentialRampToValueAtTime(40, time + 0.1);
+                gain.gain.setValueAtTime(1.2, time);
+                gain.gain.exponentialRampToValueAtTime(0.001, time + 0.4);
+                filter.type = 'lowpass'; filter.frequency.value = 400;
+            } else if (type === 'T' || type === 't' || type === 'k') {
+                osc.frequency.setValueAtTime(800, time);
+                osc.frequency.exponentialRampToValueAtTime(600, time + 0.05);
+                gain.gain.setValueAtTime(0.8, time);
+                gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+                filter.type = 'highpass'; filter.frequency.value = 1000;
+            }
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(masterGain);
+            osc.start(time);
+            osc.stop(time + 0.5);
+        }
+
+        // GENERATION LOGIC
+        function getDegreeWithSeyir(stepIndex, totalSteps, seyirType, makamName, lastDegree = null, usulName = "sofyan") {
+            const feat = MAKAM_FEATURES[makamName] || { karar: 0, guclu: 3, initial: 0, contour: "cikici" };
+            if (seyirType === "otomatik") seyirType = feat.contour;
+            const progress = stepIndex / totalSteps;
+            const usul = USULLER[usulName];
+            const usulWeight = usul.weights[stepIndex % usul.len];
+            let target;
+            if (seyirType === "cikici") {
+                if (progress < 0.2) target = feat.initial; else if (progress < 0.6) target = feat.guclu + 7; else if (progress < 0.85) target = feat.guclu; else target = feat.karar;
+            } else if (seyirType === "inici") {
+                if (progress < 0.2) target = feat.guclu + 7; else if (progress < 0.5) target = feat.guclu; else if (progress < 0.8) target = feat.karar + 3; else target = feat.karar;
+            } else {
+                if (progress < 0.3) target = feat.guclu; else if (progress < 0.6) target = feat.guclu + 4; else if (progress < 0.85) target = feat.guclu; else target = feat.karar;
+            }
+            
+            const cadencePull = (progress > 0.8) ? 3.0 : 1.0;
+            const weights = Array(SCALE_LENGTH).fill(0);
+            for (let i = 0; i < SCALE_LENGTH; i++) {
+                const distToTarget = Math.abs(i - target);
+                let w = 1.0 / (distToTarget + 1);
+                const deg = i % 7;
+                if (deg === feat.karar) w *= (1.5 * cadencePull);
+                if (deg === feat.guclu) w *= (1.3 * cadencePull);
+                if (usulWeight > 1.5 && (deg === feat.karar || deg === feat.guclu)) w *= 2.5;
+
+                if (lastDegree !== null) {
+                    const d = Math.abs(i - lastDegree);
+                    if (progress < 0.1 || progress > 0.9 || usulWeight > 1.8) {
+                        w *= d === 0 ? 0.5 : d === 1 ? 1.5 : d === 2 ? 1.2 : d === 3 ? 0.8 : 0.5;
+                    } else {
+                        w *= d === 0 ? 0.3 : d === 1 ? 3.0 : d === 2 ? 1.5 : d === 3 ? 0.4 : 0.05;
+                    }
+                }
+                weights[i] = w;
+            }
+            let total = weights.reduce((a, b) => a + b, 0);
+            let r = Math.random() * total;
+            for (let i = 0; i < SCALE_LENGTH; i++) { if (r < weights[i]) return i; r -= weights[i]; }
+            return 0;
+        }
+
+        function triggerGeneration() {
+            initAudio();
+            const mkList = Object.keys(MAKAMLAR_AEU);
+            const anaMakam = mkList[Math.floor(Math.random() * mkList.length)];
+            const usulList = Object.keys(USULLER);
+            const anaUsul = usulList[Math.floor(Math.random() * usulList.length)];
+
+            const uDef = USULLER[anaUsul];
+            bpm = uDef.minBpm + Math.floor(Math.random() * (uDef.maxBpm - uDef.minBpm));
+            document.getElementById('bpmSlider').value = bpm;
+            document.getElementById('bpmValue').textContent = bpm;
+            if (delayNode) delayNode.delayTime.setTargetAtTime((60 / bpm) * 0.75, audioCtx.currentTime, 0.1);
+
+            const tempoFactor = parseInt(bpm) / 120;
+            const density = Math.max(0.25, Math.min(0.75, 0.75 - (tempoFactor - 0.5) * 0.4));
+
+            Object.keys(blocks).forEach(key => {
+                if (key === 'B2') return;
+                const b = blocks[key];
+                b.usul = anaUsul;
+                const uLen = USULLER[anaUsul].len;
+                b.numSteps = uLen * (uLen > 8 ? 2 : 4);
+
+                if (key === 'C') { b.makam = MEYAN_MAPPING[anaMakam] || anaMakam; b.octaveShift = true; }
+                else { b.makam = anaMakam; b.octaveShift = false; }
+
+                let lastDeg = null;
+                for (let i = 0; i < b.numSteps; i++) {
+                    const usulW = USULLER[b.usul].weights[i % USULLER[b.usul].len];
+                    b.steps[i].importance = Math.random() * usulW;
+                    b.steps[i].active = (i === 0) ? true : (b.steps[i].importance > (1.2 - density));
+                    if (b.steps[i].active) {
+                        b.steps[i].degree = getDegreeWithSeyir(i, b.numSteps, b.seyir, b.makam, lastDeg, b.usul);
+                        lastDeg = b.steps[i].degree;
+                    }
+                }
+            });
+
+            // B2 Logic
+            const bBlock = blocks['B'];
+            const b2Block = blocks['B2'];
+            b2Block.usul = bBlock.usul; b2Block.numSteps = bBlock.numSteps;
+            b2Block.makam = bBlock.makam; b2Block.octaveShift = bBlock.octaveShift;
+            for (let i = 0; i < bBlock.numSteps; i++) b2Block.steps[i] = JSON.parse(JSON.stringify(bBlock.steps[i]));
+            
+            const cadenceChunk = Math.min(4, Math.floor(b2Block.numSteps * 0.2));
+            let cadenceLastDeg = (b2Block.numSteps - cadenceChunk - 1 >= 0) ? b2Block.steps[b2Block.numSteps - cadenceChunk - 1].degree : null;
+            for (let i = b2Block.numSteps - cadenceChunk; i < b2Block.numSteps; i++) {
+                b2Block.steps[i].active = true; b2Block.steps[i].importance = 2.0;
+                b2Block.steps[i].degree = getDegreeWithSeyir(i, b2Block.numSteps, "inici", b2Block.makam, cadenceLastDeg, b2Block.usul);
+                cadenceLastDeg = b2Block.steps[i].degree;
+            }
+        }
+
+        // SCHEDULER
+        function scheduler() {
+            while (nextNoteTime < audioCtx.currentTime + 0.1) {
+                const b = blocks[formStructure[playbackFormIndex]];
+                const step = b.steps[playbackStepIndex];
+                if (step.active) {
+                    const p = getPitchData(step.degree, b.makam, b.octaveShift);
+                    playPluck(p.freq, nextNoteTime);
+                    // visual feedback for played key
+                    triggerKeyVisual(step.degree, nextNoteTime - audioCtx.currentTime);
+                }
+
+                const usul = USULLER[b.usul];
+                const uChar = usul.map[playbackStepIndex % usul.len];
+                if (uChar === 'D' || uChar === 'T') {
+                    playDrum(uChar, nextNoteTime);
+                }
+
+                nextNoteTime += (60 / parseInt(bpm)) / 4; 
+                playbackStepIndex++;
+                if (playbackStepIndex >= b.numSteps) { 
+                    playbackStepIndex = 0; 
+                    playbackFormIndex = (playbackFormIndex + 1) % formStructure.length; 
+                }
+            }
+            timerID = setTimeout(scheduler, 25);
+        }
+
+        function triggerKeyVisual(degree, delaySec) {
+            setTimeout(() => {
+                if(keysElements[degree]) {
+                    keysElements[degree].classList.add('active');
+                    setTimeout(() => keysElements[degree].classList.remove('active'), 150);
+                }
+            }, delaySec * 1000);
+        }
+
+        // KEYBOARD UI
+        let activeSwipeKey = null;
+
+        function createKeyboard() {
+            const container = document.getElementById('keyboard-container');
+            container.innerHTML = '';
+            keysElements = [];
+            
+            // Generate 15 keys for the SCALE_LENGTH
+            for(let i=0; i<SCALE_LENGTH; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'headlight-bar';
+                bar.dataset.degree = i;
+                
+                // Add skew for the lion claw effect
+                if (i < 7) bar.classList.add('bar-left');
+                else if (i === 7) bar.classList.add('bar-center');
+                else bar.classList.add('bar-right');
+
+                // Arranged to fill vertical space smoothly.
+                // Middle shorter, edges taller
+                const distFromCenter = Math.abs(i - 7);
+                const heightScale = 50 + (distFromCenter / 7) * 45; 
+                bar.style.height = `${heightScale}%`;
+
+                bar.addEventListener('mousedown', (e) => { activeSwipeKey = i; pressKey(i); });
+                bar.addEventListener('touchstart', (e) => { e.preventDefault(); activeSwipeKey = i; pressKey(i); });
+                
+                container.appendChild(bar);
+                keysElements.push(bar);
+            }
+
+            container.addEventListener('touchmove', handlePointerMove, {passive: false});
+            container.addEventListener('mousemove', handlePointerMove);
+            window.addEventListener('touchend', () => activeSwipeKey = null);
+            window.addEventListener('mouseup', () => activeSwipeKey = null);
+        }
+
+        function handlePointerMove(e) {
+            if (e.buttons === 1 || e.touches) {
+                if (e.touches) e.preventDefault();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const el = document.elementFromPoint(clientX, clientY);
+                if (el && el.classList.contains('headlight-bar')) {
+                    const degree = parseInt(el.dataset.degree);
+                    if (degree !== activeSwipeKey) {
+                        activeSwipeKey = degree;
+                        pressKey(degree);
+                    }
+                } else {
+                    activeSwipeKey = null;
+                }
+            }
+        }
+
+        function pressKey(degree) {
+            initAudio();
+            const currentBlockId = formStructure[playbackFormIndex];
+            const b = blocks[currentBlockId]; // Context from playing track or fallback
+            const p = getPitchData(degree, b.makam, b.octaveShift);
+            
+            playPad(p.freq, audioCtx.currentTime); // Pad sound for user interaction
+
+            keysElements[degree].classList.add('active');
+            setTimeout(() => keysElements[degree].classList.remove('active'), 250);
+        }
+
+        // EVENTS
+        document.getElementById('password-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('start-btn').click();
+            }
+        });
+
+        document.getElementById('start-btn').addEventListener('click', async () => {
+            const pwInput = document.getElementById('password-input').value;
+            if (pwInput !== "demo123") {
+                document.getElementById('error-msg').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('overlay').style.display = 'none';
+            initAudio();
+            createKeyboard();
+            // Generate a random seed
+            triggerGeneration();
+        });
+
+        document.getElementById('playBtn').onclick = () => {
+            initAudio();
+            if (!isPlaying) {
+                isPlaying = true;
+                document.getElementById('playBtn').classList.add('active');
+                document.getElementById('stopBtn').classList.remove('active');
+                nextNoteTime = audioCtx.currentTime + 0.1;
+                scheduler();
+            }
+        };
+
+        document.getElementById('stopBtn').onclick = () => {
+            isPlaying = false;
+            clearTimeout(timerID);
+            document.getElementById('playBtn').classList.remove('active');
+            document.getElementById('stopBtn').classList.add('active');
+        };
+
+        document.getElementById('genBtn').onclick = () => {
+            triggerGeneration();
+            keysElements.forEach(k => {
+                k.classList.add('active');
+                setTimeout(() => k.classList.remove('active'), 300);
+            });
+        };
+
+        document.getElementById('bpmSlider').oninput = (e) => {
+            bpm = parseInt(e.target.value);
+            document.getElementById('bpmValue').textContent = bpm;
+            if (delayNode) delayNode.delayTime.setTargetAtTime((60 / bpm) * 0.75, audioCtx.currentTime, 0.1);
+        };
+
+        document.getElementById('delayBtn').onclick = (e) => {
+            initAudio();
+            isDelayOn = !isDelayOn;
+            delayInputGain.gain.value = isDelayOn ? 1 : 0;
+            e.target.classList.toggle('active', isDelayOn);
+        };
+
+        document.getElementById('reverbBtn').onclick = (e) => {
+            initAudio();
+            isReverbOn = !isReverbOn;
+            reverbInputGain.gain.value = isReverbOn ? 1 : 0;
+            e.target.classList.toggle('active', isReverbOn);
+        };
+
+        document.getElementById('drumsBtn').onclick = (e) => {
+            initAudio();
+            isDrumsOn = !isDrumsOn;
+            e.target.classList.toggle('active', isDrumsOn);
+        };
+
+    </script>
+</body>
+</html>
