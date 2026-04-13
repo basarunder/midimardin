@@ -1,15 +1,24 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MIDI MARDIN</title>
     <style>
         /* Basic Resets & Vanilla Layout */
-        *, *:before, *:after { box-sizing: border-box; }
-        html, body {
-            margin: 0; padding: 0;
-            width: 100vw; height: 100vh;
+        *,
+        *:before,
+        *:after {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
             background-color: #050505;
             color: #ffffff;
             font-family: 'Inter', sans-serif;
@@ -27,33 +36,57 @@
         .headlight-bar {
             flex: 1;
             height: 180px;
-            background: rgba(255, 255, 255, 0.15); /* Slightly darker/transparent rest state */
+            background: rgba(255, 255, 255, 0.15);
+            /* Slightly darker/transparent rest state */
             border-radius: 6px;
             transition: background 0.15s ease-out, box-shadow 0.1s ease-out, transform 0.1s ease-out;
             cursor: pointer;
-            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8), 0 0 10px rgba(255, 255, 255, 0.05); /* Inset shadow gives depth */
-            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8), 0 0 10px rgba(255, 255, 255, 0.05);
+            /* Inset shadow gives depth */
+            border: 1px solid rgba(255, 255, 255, 0.1);
             max-width: 32px;
             margin: 0 auto;
         }
 
-        .bar-left { transform: skewX(-4deg); }
-        .bar-right { transform: skewX(4deg); }
-        .bar-center { transform: skewX(0deg); }
+        .bar-left {
+            transform: skewX(-4deg);
+        }
+
+        .bar-right {
+            transform: skewX(4deg);
+        }
+
+        .bar-center {
+            transform: skewX(0deg);
+        }
 
         .headlight-bar.active {
             background: #ffffff;
             box-shadow: 0 0 35px #ffffff, 0 0 70px rgba(255, 255, 255, 0.8), inset 0 0 10px #ffffff;
         }
-        
+
         /* Popping out when active */
-        .bar-left.active { transform: scale(1.05) skewX(-4deg); z-index:10; }
-        .bar-right.active { transform: scale(1.05) skewX(4deg); z-index:10; }
-        .bar-center.active { transform: scale(1.05) skewX(0deg); z-index:10; }
+        .bar-left.active {
+            transform: scale(1.05) skewX(-4deg);
+            z-index: 10;
+        }
+
+        .bar-right.active {
+            transform: scale(1.05) skewX(4deg);
+            z-index: 10;
+        }
+
+        .bar-center.active {
+            transform: scale(1.05) skewX(0deg);
+            z-index: 10;
+        }
 
         /* Controls */
-        .control-group { display: flex; gap: 0.75rem; }
-        
+        .control-group {
+            display: flex;
+            gap: 0.75rem;
+        }
+
         .control-btn {
             background: transparent;
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -63,34 +96,65 @@
             font-weight: 300;
             font-size: 0.75rem;
             letter-spacing: 0.15em;
-            border-radius: 9999px; /* Pill shape */
+            border-radius: 9999px;
+            /* Pill shape */
             padding: 0.5rem 1rem;
             cursor: pointer;
         }
-        
-        .control-btn:active, .control-btn.active {
+
+        .control-btn:active,
+        .control-btn.active {
             border-color: #ffffff;
             color: #fff;
             background: rgba(255, 255, 255, 0.1);
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
         }
-        
-        #genBtn { border-color: rgba(255,255,255,0.4); font-weight: 600; color: #ffffff; }
 
-        .bottom-controls {
-            width: 100%; height: 80px; display: flex; justify-content: space-between; align-items: center;
-            background-color: #000000; border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 0 1.5rem;
+        #recBtn {
+            border-color: rgba(255, 68, 68, 0.4);
+            font-weight: 600;
+            color: #ff4444;
         }
 
-        .tempo-group { display: flex; flex-direction: column; align-items: center; flex: 1; margin: 0 2rem; max-width: 250px; }
-        .tempo-group label { font-size: 0.6rem; color: #6b7280; letter-spacing: 0.2em; margin-bottom: 0.5rem; text-transform: uppercase; font-weight: bold; }
-        .tempo-group span { color: #ffffff; }
+        .bottom-controls {
+            width: 100%;
+            height: 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #000000;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0 1.5rem;
+        }
+
+        .tempo-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            margin: 0 2rem;
+            max-width: 250px;
+        }
+
+        .tempo-group label {
+            font-size: 0.6rem;
+            color: #6b7280;
+            letter-spacing: 0.2em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .tempo-group span {
+            color: #ffffff;
+        }
 
         input[type=range] {
             -webkit-appearance: none;
             background: transparent;
             width: 100%;
         }
+
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
             height: 20px;
@@ -101,6 +165,7 @@
             margin-top: -8px;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
         }
+
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
             height: 4px;
@@ -112,37 +177,56 @@
         #overlay {
             position: absolute;
             inset: 0;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0, 0, 0, 0.9);
             z-index: 50;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
-        
+
         #overlay h1 {
-            font-size: 2.25rem; font-weight: 300; letter-spacing: 0.1em;
-            margin: 0 0 2.5rem 0; color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            font-size: 2.25rem;
+            font-weight: 300;
+            letter-spacing: 0.1em;
+            margin: 0 0 2.5rem 0;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
         }
-        
+
         #start-btn {
-            padding: 0.75rem 2rem; border: 1px solid #ffffff; color: #ffffff;
-            background: transparent; transition: all 0.3s; letter-spacing: 0.05em;
-            font-weight: 700; cursor: pointer; font-size: 1rem;
+            padding: 0.75rem 2rem;
+            border: 1px solid #ffffff;
+            color: #ffffff;
+            background: transparent;
+            transition: all 0.3s;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1rem;
         }
-        
-        #start-btn:hover { background: #ffffff; color: #000000; }
-        
+
+        #start-btn:hover {
+            background: #ffffff;
+            color: #000000;
+        }
+
         #keyboard-container {
-            width: 100%; flex: 1; display: flex; align-items: center; justify-content: center;
-            gap: 0.5rem; margin-top: 1rem; padding: 0 1rem;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 0 1rem;
         }
 
         /* Password Input Styling */
         #password-input {
             padding: 0.75rem 1rem;
-            border: 1px solid rgba(255,255,255,0.3);
-            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.5);
             color: white;
             text-align: center;
             font-size: 1rem;
@@ -152,11 +236,13 @@
             font-family: 'Inter', sans-serif;
             transition: border-color 0.3s;
         }
+
         #password-input:focus {
             border-color: #ffffff;
         }
     </style>
 </head>
+
 <body>
 
     <div id="overlay">
@@ -164,7 +250,9 @@
         <div id="login-container" style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem;">
             <input type="password" id="password-input" placeholder="ENTER ACCESS CODE">
             <button id="start-btn">START EXPERIENCE</button>
-            <p id="error-msg" style="color: #ff4444; font-size: 0.8rem; display: none; margin: 0; letter-spacing: 0.05em; text-transform: uppercase;">Incorrect access code</p>
+            <p id="error-msg"
+                style="color: #ff4444; font-size: 0.8rem; display: none; margin: 0; letter-spacing: 0.05em; text-transform: uppercase;">
+                Incorrect access code</p>
         </div>
     </div>
 
@@ -175,11 +263,15 @@
 
     <!-- Bottom Row: Controls -->
     <div class="bottom-controls">
-        
+
         <div class="control-group">
             <button id="playBtn" class="control-btn">PLAY</button>
             <button id="stopBtn" class="control-btn">STOP</button>
-            <button id="genBtn" class="control-btn" id="genBtn">GENERATE</button>
+            <button id="recBtn" class="control-btn"
+                style="color: #ff4444; border-color: rgba(255, 68, 68, 0.4);">REC</button>
+            <button id="genBtn" class="control-btn"
+                style="color: #4ade80; border-color: rgba(74, 222, 128, 0.4);">GEN</button>
+            <button id="clearBtn" class="control-btn">CLEAR</button>
         </div>
 
         <div class="tempo-group">
@@ -188,34 +280,30 @@
         </div>
 
         <div class="control-group">
+            <button id="pluckBtn" class="control-btn active">PLUCK</button>
+            <button id="padBtn" class="control-btn active">PAD</button>
             <button id="delayBtn" class="control-btn active">DELAY</button>
             <button id="reverbBtn" class="control-btn">REVERB</button>
-            <button id="drumsBtn" class="control-btn active">DRUMS</button>
+            <button id="drumsBtn" class="control-btn active">BEAT</button>
         </div>
     </div>
 
     <script>
         // MARDIN SEQUENCER LOGIC AND ADAPTATION
-        const MAKAMLAR_AEU = {
-            "Hüseyni": [0, 9, 13, 22, 31, 35, 44],
-            "Uşşak": [0, 8, 13, 22, 31, 35, 44],
-            "Kürdi": [0, 4, 13, 22, 31, 35, 44],
-            "Saba": [0, 8, 13, 18, 31, 35, 44],
-            "Rast": [0, 9, 17, 22, 31, 40, 48],
-            "Hicaz": [0, 5, 17, 22, 31, 35, 44],
-            "Nikriz": [0, 9, 13, 25, 31, 40, 44],
-            "Nihavend": [0, 9, 13, 22, 31, 35, 47],
+        const CALM_SCALES = {
+            "Rast": [0, 2, 4, 5, 7, 9, 11].map(s => s * 100),
+            "Mahur": [0, 2, 4, 5, 7, 9, 11].map(s => s * 100),
+            "Nihavend": [0, 2, 3, 5, 7, 8, 10].map(s => s * 100),
+            "Lydian": [0, 2, 4, 6, 7, 9, 11].map(s => s * 100),
+            "Mixolydian": [0, 2, 4, 5, 7, 9, 10].map(s => s * 100)
         };
 
-        const MAKAM_FEATURES = {
-            "Hüseyni": { karar: 0, guclu: 4, initial: 4, contour: "inici_cikici" },
-            "Uşşak": { karar: 0, guclu: 3, initial: 0, contour: "cikici" },
-            "Kürdi": { karar: 0, guclu: 3, initial: 0, contour: "cikici" },
-            "Saba": { karar: 0, guclu: 3, initial: 2, contour: "cikici" },
+        const SCALE_FEATURES = {
             "Rast": { karar: 0, guclu: 3, initial: 0, contour: "cikici" },
-            "Hicaz": { karar: 0, guclu: 3, initial: 3, contour: "inici_cikici" },
-            "Nikriz": { karar: 0, guclu: 3, initial: 0, contour: "inici_cikici" },
+            "Mahur": { karar: 0, guclu: 4, initial: 4, contour: "inici" },
             "Nihavend": { karar: 0, guclu: 3, initial: 3, contour: "inici" },
+            "Lydian": { karar: 0, guclu: 4, initial: 4, contour: "inici" },
+            "Mixolydian": { karar: 0, guclu: 4, initial: 0, contour: "cikici" }
         };
 
         const USULLER = {
@@ -226,34 +314,36 @@
         };
 
         const MEYAN_MAPPING = {
-            "Hüseyni": "Hüseyni", "Uşşak": "Hüseyni", "Kürdi": "Nihavend", "Saba": "Hicaz", 
-            "Rast": "Nikriz", "Hicaz": "Hicaz", "Nikriz": "Rast", "Nihavend": "Kürdi"
+            "Rast": "Mahur", "Mahur": "Rast", "Nihavend": "Nihavend",
+            "Lydian": "Mixolydian", "Mixolydian": "Lydian"
         };
 
-        const SCALE_LENGTH = 15;
-        const MAX_STEPS = 32;
+        const SCALE_LENGTH = 11;
+        const MAX_STEPS = 256;
 
         const blocks = {
-            'A': { numSteps: 32, steps: Array(MAX_STEPS).fill().map(() => ({ active: false, degree: 0, glide: false })), makam: 'Hüseyni', usul: 'sofyan', seyir: 'otomatik', octaveShift: false },
-            'B': { numSteps: 32, steps: Array(MAX_STEPS).fill().map(() => ({ active: false, degree: 0, glide: false })), makam: 'Hüseyni', usul: 'sofyan', seyir: 'inici', octaveShift: false },
-            'B2': { numSteps: 32, steps: Array(MAX_STEPS).fill().map(() => ({ active: false, degree: 0, glide: false })), makam: 'Hüseyni', usul: 'sofyan', seyir: 'inici', octaveShift: false },
-            'C': { numSteps: 32, steps: Array(MAX_STEPS).fill().map(() => ({ active: false, degree: 0, glide: false })), makam: 'Uşşak', usul: 'sofyan', seyir: 'inici_cikici', octaveShift: true }
+            'A': { numSteps: 32, steps: Array(MAX_STEPS).fill().map(() => ({ active: false, degree: 0, glide: false, padEvent: null, padDegree: null })), makam: 'Rast', usul: 'sofyan', seyir: 'otomatik', octaveShift: false }
         };
 
-        const formStructure = ['A', 'B', 'A', 'B2', 'C', 'C', 'A', 'B2'];
+        const formStructure = ['A'];
         let playbackFormIndex = 0;
         let playbackStepIndex = 0;
         let nextNoteTime = 0;
         let timerID;
 
         let isPlaying = false;
-        let bpm = 100;
+        let isRecording = false;
+        let bpm = 70; // Calmer default tempo
         let isDelayOn = true;
         let isReverbOn = false;
         let isDrumsOn = true;
+        let isPluckOn = true;
+        let isPadOn = true;
+        let isStereoDownmix = false;
 
-        let audioCtx, masterGain, delayNode, delayFeedback, delayInputGain, reverbNode, reverbInputGain, noiseBuffer;
+        let audioCtx, masterOut, globalFadeGain, masterLimiter, delayNode, delayFeedback, delayInputGain, reverbNode, reverbInputGain, noiseBuffer;
         let keysElements = [];
+        let loopingPadReleases = {};
 
         // Audio Setup
         function initAudio() {
@@ -262,24 +352,31 @@
                 return;
             }
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
             const nLen = audioCtx.sampleRate * 0.1;
             noiseBuffer = audioCtx.createBuffer(1, nLen, audioCtx.sampleRate);
             const nd = noiseBuffer.getChannelData(0);
             for (let i = 0; i < nLen; i++) nd[i] = Math.random() * 2 - 1;
-            
-            masterGain = audioCtx.createGain();
-            masterGain.gain.value = 0.6;
 
-            const limiter = audioCtx.createDynamicsCompressor();
-            limiter.threshold.setValueAtTime(-1.0, audioCtx.currentTime);
-            limiter.knee.setValueAtTime(0, audioCtx.currentTime);        
-            limiter.ratio.setValueAtTime(20.0, audioCtx.currentTime);    
-            limiter.attack.setValueAtTime(0.001, audioCtx.currentTime);  
-            limiter.release.setValueAtTime(0.05, audioCtx.currentTime);  
+            // Stereo Master Bus ve Limiter oluşturuluyor
+            if (!globalFadeGain) {
+                masterLimiter = audioCtx.createDynamicsCompressor();
+                masterLimiter.threshold.value = -3.0;
+                masterLimiter.knee.value = 0.0;
+                masterLimiter.ratio.value = 20.0;
+                masterLimiter.attack.value = 0.005;
+                masterLimiter.release.value = 0.100;
+                masterLimiter.connect(audioCtx.destination);
 
-            masterGain.connect(limiter);
-            limiter.connect(audioCtx.destination);
-            
+                globalFadeGain = audioCtx.createGain();
+                globalFadeGain.gain.value = 1.0;
+                globalFadeGain.connect(masterLimiter);
+
+                masterOut = audioCtx.createGain();
+                masterOut.gain.value = 1.0;
+                masterOut.connect(globalFadeGain);
+            }
+
             delayInputGain = audioCtx.createGain();
             delayInputGain.gain.value = isDelayOn ? 1 : 0;
             delayNode = audioCtx.createDelay();
@@ -289,8 +386,12 @@
             delayInputGain.connect(delayNode);
             delayNode.connect(delayFeedback);
             delayFeedback.connect(delayNode);
-            delayNode.connect(masterGain);
-            
+
+            let delayOutputGain = audioCtx.createGain();
+            delayOutputGain.gain.value = 0.5;
+            delayNode.connect(delayOutputGain);
+            delayOutputGain.connect(masterOut); // Direkt MasterOut
+
             reverbInputGain = audioCtx.createGain();
             reverbInputGain.gain.value = isReverbOn ? 1 : 0;
             reverbNode = audioCtx.createConvolver();
@@ -299,37 +400,80 @@
             for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < irLen; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.8)); }
             reverbNode.buffer = ir;
             reverbInputGain.connect(reverbNode);
-            reverbNode.connect(masterGain);
+
+            let reverbOutputGain = audioCtx.createGain();
+            reverbOutputGain.gain.value = 0.5;
+            reverbNode.connect(reverbOutputGain);
+            reverbOutputGain.connect(masterOut); // Direkt MasterOut
         }
 
-        function getPitchData(degree, makam, octaveShift) {
-            const oct = Math.floor(degree / 7) + (octaveShift ? 1 : 0);
-            const idx = degree % 7;
-            const centsFromRoot = MAKAMLAR_AEU[makam][idx] * (1200 / 53) + (oct * 1200);
-            const exactMidi = 45 + (centsFromRoot / 100);
+        let currentPluckChannel = 0;
+        let rootMidiOffset = 0; // Transposition for generative key changes
+
+        function getPentatonicMap(makam) {
+            let subset = [0, 1, 2, 4, 5]; // Default major pentatonic
+            if (makam === "Nihavend") subset = [0, 2, 3, 4, 6]; // Minor pentatonic
+
+            let map = [];
+            for (let i = 0; i < 30; i++) {
+                const oct = Math.floor(i / 5);
+                const step = i % 5;
+                map.push(subset[step] + (oct * 7));
+            }
+            return map;
+        }
+
+        let padPatch = {
+            osc1Type: 'triangle', osc2Type: 'sine', detuneCents: 0,
+            filterBase: 350, filterEnvMod: 50, attackTime: 2.0, releaseTime: 6.0,
+            tremoloFreq: 0.5, tremoloDepth: 0.1, vibratoFreq: 0.5, vibratoDepth: 3, subDivisor: 2,
+            filterLfoFreq: 0.5, filterLfoDepth: 0
+        };
+
+        let pluckPatch = {
+            filterFreq: 2500,
+            tensionGain: 3.5,
+            decayScale: 1.0,
+            noiseDecay: 0.04
+        };
+
+        function getPitchData(uiDegree, makam, octaveShift) {
+            const toneMap = getPentatonicMap(makam);
+            const heptatonicDegree = toneMap[uiDegree] ?? uiDegree;
+
+            const oct = Math.floor(heptatonicDegree / 7) + (octaveShift ? 1 : 0);
+            const idx = heptatonicDegree % 7;
+            const centsFromRoot = CALM_SCALES[makam] ? CALM_SCALES[makam][idx] : CALM_SCALES["Rast"][idx];
+            // Root is A2 (45) + random transposition
+            const exactMidi = 45 + rootMidiOffset + (centsFromRoot / 100) + (oct * 12);
             return { freq: 440 * Math.pow(2, (exactMidi - 69) / 12), midiNote: Math.round(exactMidi) };
         }
 
-        function playPluck(freq, time, userTriggered=false) {
-            if(!audioCtx) return;
-            const detune = (Math.random() * 6 - 3);
+        function playPluck(freq, time, channelIndex = null) {
+            if (!isPluckOn || !audioCtx) return;
+            const detune = (Math.random() * 4 - 2);
             const aFreq = freq * Math.pow(2, detune / 1200);
             const noise = audioCtx.createBufferSource(); noise.buffer = noiseBuffer;
             const nG = audioCtx.createGain(); const nF = audioCtx.createBiquadFilter();
-            nF.type = 'lowpass'; nF.frequency.setValueAtTime(6000, time);
-            nG.gain.setValueAtTime(0, time); nG.gain.linearRampToValueAtTime(8.0, time + 0.001);
-            nG.gain.exponentialRampToValueAtTime(0.001, time + 0.03);
+            nF.type = 'lowpass'; nF.frequency.setValueAtTime(pluckPatch.filterFreq, time); // Softer pluck attack
+            nG.gain.setValueAtTime(0, time); nG.gain.linearRampToValueAtTime(pluckPatch.tensionGain, time + 0.001); // Lower tension
+            nG.gain.exponentialRampToValueAtTime(0.001, time + pluckPatch.noiseDecay);
             noise.connect(nF); nF.connect(nG);
             const modes = [1, 2, 3, 4, 5, 6];
-            const mRG = audioCtx.createGain(); 
-            // increase gain if user triggered to stand out
-            mRG.gain.setValueAtTime(userTriggered ? 8.0 : 5.0, time);
-            mRG.connect(masterGain); mRG.connect(delayInputGain); mRG.connect(reverbInputGain);
+            const mRG = audioCtx.createGain();
+            mRG.gain.setValueAtTime(4.0, time);
+
+            // Stereo panning
+            const panner = audioCtx.createStereoPanner();
+            panner.pan.value = (Math.random() * 1.5) - 0.75; // Random pan
+            mRG.connect(panner);
+            panner.connect(masterOut);
+            mRG.connect(delayInputGain); mRG.connect(reverbInputGain);
             modes.forEach((ratio, idx) => {
                 const res = audioCtx.createBiquadFilter(); res.type = 'bandpass';
-                res.Q.value = 120 + (Math.random() * 20 - 10);
+                res.Q.value = 80 + (Math.random() * 15); // Less harsh string resonance
                 res.frequency.setValueAtTime(aFreq * ratio, time);
-                const rG = audioCtx.createGain(); const decay = 1.0 / (idx * 0.6 + 1);
+                const rG = audioCtx.createGain(); const decay = (1.0 / (idx * 0.7 + 1)) * pluckPatch.decayScale;
                 rG.gain.setValueAtTime(0, time); rG.gain.linearRampToValueAtTime(1.0 / (idx * 0.5 + 1), time + 0.005);
                 rG.gain.exponentialRampToValueAtTime(0.001, time + decay);
                 nG.connect(res); res.connect(rG); rG.connect(mRG);
@@ -338,52 +482,105 @@
         }
 
         function playPad(freq, time) {
-            if(!audioCtx) return;
-            const detune = (Math.random() * 6 - 3);
-            const aFreq = freq * Math.pow(2, detune / 1200);
-            
-            const noise = audioCtx.createBufferSource(); 
-            noise.buffer = noiseBuffer;
-            noise.loop = true; // Looping for continuous pad sound
-            
-            const nG = audioCtx.createGain(); 
-            const nF = audioCtx.createBiquadFilter();
-            nF.type = 'lowpass'; 
-            nF.frequency.setValueAtTime(3000, time);
-            
-            const attackTime = 0.8;
-            const releaseTime = 2.5;
+            if (!isPadOn || !audioCtx) return () => { };
 
-            nG.gain.setValueAtTime(0, time); 
-            nG.gain.linearRampToValueAtTime(1.5, time + attackTime);
-            nG.gain.setTargetAtTime(0, time + attackTime, releaseTime / 3);
-            
-            noise.connect(nF); 
+            const aFreq = freq * Math.pow(2, padPatch.detuneCents / 1200);
+
+            const osc1 = audioCtx.createOscillator();
+            osc1.type = padPatch.osc1Type;
+            osc1.frequency.value = aFreq;
+
+            const osc2 = audioCtx.createOscillator();
+            osc2.type = padPatch.osc2Type;
+            osc2.frequency.value = aFreq / padPatch.subDivisor;
+            osc2.detune.value = (Math.random() * 6) - 3; // hafif chorus
+
+            // Pitch LFO VIBRATO (Synced)
+            let vibLfo;
+            if (padPatch.vibratoDepth > 0) {
+                vibLfo = audioCtx.createOscillator();
+                vibLfo.type = 'sine';
+                vibLfo.frequency.value = padPatch.vibratoFreq;
+                const vibGain = audioCtx.createGain();
+                vibGain.gain.value = padPatch.vibratoDepth;
+                vibLfo.connect(vibGain);
+                vibGain.connect(osc1.detune);
+                vibGain.connect(osc2.detune);
+                vibLfo.start(time);
+            }
+
+            const nG = audioCtx.createGain();
+            const nF = audioCtx.createBiquadFilter();
+            nF.type = 'lowpass';
+            nF.frequency.setValueAtTime(padPatch.filterBase, time);
+            // Hafif organic filter envelope
+            nF.frequency.linearRampToValueAtTime(padPatch.filterBase + padPatch.filterEnvMod, time + padPatch.attackTime);
+            nF.Q.value = 0.4;
+
+            // Filter LFO (Synced Filter Automation)
+            let fLfo;
+            if (padPatch.filterLfoDepth > 0) {
+                fLfo = audioCtx.createOscillator();
+                fLfo.type = 'sine';
+                fLfo.frequency.value = padPatch.filterLfoFreq;
+                const fGain = audioCtx.createGain();
+                fGain.gain.value = padPatch.filterLfoDepth;
+                fLfo.connect(fGain);
+                fGain.connect(nF.detune); // Modulate detune safely instead of frequency directly
+                fLfo.start(time);
+            }
+
+            nG.gain.setValueAtTime(0, time);
+            nG.gain.setTargetAtTime(1.0, time, padPatch.attackTime / 3);
+
+            osc1.connect(nF);
+            osc2.connect(nF);
             nF.connect(nG);
-            
-            const modes = [1, 2, 3, 4, 5, 6];
-            const mRG = audioCtx.createGain(); 
-            mRG.gain.setValueAtTime(3.0, time); // Reduced Pad volume (was 10.0)
-            mRG.connect(masterGain); 
-            mRG.connect(delayInputGain); 
+
+            // Amplitude LFO TREMOLO (Synced)
+            const tremGain = audioCtx.createGain();
+            tremGain.gain.value = 1.0 - padPatch.tremoloDepth;
+            nG.connect(tremGain);
+
+            let tremLfo;
+            if (padPatch.tremoloDepth > 0) {
+                tremLfo = audioCtx.createOscillator();
+                tremLfo.type = 'sine';
+                tremLfo.frequency.value = padPatch.tremoloFreq;
+                const tremScale = audioCtx.createGain();
+                tremScale.gain.value = padPatch.tremoloDepth;
+                tremLfo.connect(tremScale);
+                tremScale.connect(tremGain.gain);
+                tremLfo.start(time);
+            }
+
+            const mRG = audioCtx.createGain();
+            mRG.gain.setValueAtTime(0.045, time); // AŞIRI SESSİZ (+1dB)
+
+            tremGain.connect(mRG);
+            mRG.connect(masterOut);
+            mRG.connect(delayInputGain);
             mRG.connect(reverbInputGain);
-            
-            modes.forEach((ratio, idx) => {
-                const res = audioCtx.createBiquadFilter(); 
-                res.type = 'bandpass';
-                res.Q.value = 140 + (Math.random() * 20); // High resonance for bowed/pad feel
-                res.frequency.setValueAtTime(aFreq * ratio, time);
-                
-                const rG = audioCtx.createGain(); 
-                rG.gain.setValueAtTime(1.0 / (idx * 0.8 + 1), time); 
-                
-                nG.connect(res); 
-                res.connect(rG); 
-                rG.connect(mRG);
-            });
-            
-            noise.start(time);
-            noise.stop(time + attackTime + releaseTime * 2);
+
+            osc1.start(time);
+            osc2.start(time);
+
+            let isReleased = false;
+            return () => {
+                if (isReleased) return;
+                isReleased = true;
+                const now = audioCtx.currentTime;
+                nG.gain.cancelScheduledValues(now);
+                nG.gain.setValueAtTime(nG.gain.value, now);
+                nG.gain.setTargetAtTime(0.0001, now, padPatch.releaseTime / 3);
+
+                const killTime = now + padPatch.releaseTime + 1;
+                osc1.stop(killTime);
+                osc2.stop(killTime);
+                if (vibLfo) vibLfo.stop(killTime);
+                if (tremLfo) tremLfo.stop(killTime);
+                if (fLfo) fLfo.stop(killTime);
+            };
         }
 
         function playDrum(type, time) {
@@ -408,14 +605,17 @@
 
             osc.connect(filter);
             filter.connect(gain);
-            gain.connect(masterGain);
+            const panner = audioCtx.createStereoPanner();
+            panner.pan.value = type === 'D' ? 0 : ((Math.random() * 1.0) - 0.5);
+            gain.connect(panner);
+            panner.connect(masterOut);
             osc.start(time);
             osc.stop(time + 0.5);
         }
 
         // GENERATION LOGIC
         function getDegreeWithSeyir(stepIndex, totalSteps, seyirType, makamName, lastDegree = null, usulName = "sofyan") {
-            const feat = MAKAM_FEATURES[makamName] || { karar: 0, guclu: 3, initial: 0, contour: "cikici" };
+            const feat = SCALE_FEATURES[makamName] || { karar: 0, guclu: 4, initial: 0, contour: "cikici" };
             if (seyirType === "otomatik") seyirType = feat.contour;
             const progress = stepIndex / totalSteps;
             const usul = USULLER[usulName];
@@ -428,7 +628,7 @@
             } else {
                 if (progress < 0.3) target = feat.guclu; else if (progress < 0.6) target = feat.guclu + 4; else if (progress < 0.85) target = feat.guclu; else target = feat.karar;
             }
-            
+
             const cadencePull = (progress > 0.8) ? 3.0 : 1.0;
             const weights = Array(SCALE_LENGTH).fill(0);
             for (let i = 0; i < SCALE_LENGTH; i++) {
@@ -455,9 +655,56 @@
             return 0;
         }
 
-        function triggerGeneration() {
+        let isGenerating = false;
+        function triggerGenerationWithFade() {
+            if (isGenerating) return;
             initAudio();
-            const mkList = Object.keys(MAKAMLAR_AEU);
+            isGenerating = true;
+
+            const now = audioCtx.currentTime;
+
+            // Tüm delay looplarını boğazından sıkıyoruz ki eski makamdan gelen uyumsuz yankılar bitsin
+            if (delayFeedback) delayFeedback.gain.setTargetAtTime(0, now, 0.1);
+            if (reverbInputGain) reverbInputGain.gain.setTargetAtTime(0, now, 0.1);
+
+            // Ana çıkışı yavaşça karart
+            globalFadeGain.gain.cancelScheduledValues(now);
+            globalFadeGain.gain.setValueAtTime(globalFadeGain.gain.value, now);
+            globalFadeGain.gain.setTargetAtTime(0.001, now, 0.3); // Exponential fade daha etkilidir
+
+            setTimeout(() => {
+                triggerGenerationInner(); // Yeni akor, yeni scale, yeni root üretimi
+
+                const resumeTime = audioCtx.currentTime;
+
+                // Ana çıkışı geri aydınlat
+                globalFadeGain.gain.cancelScheduledValues(resumeTime);
+                globalFadeGain.gain.setValueAtTime(0.001, resumeTime);
+                globalFadeGain.gain.setTargetAtTime(1.0, resumeTime, 1.0);
+
+                // Yankıları geri ver
+                if (delayFeedback && isDelayOn) {
+                    delayFeedback.gain.cancelScheduledValues(resumeTime);
+                    delayFeedback.gain.setValueAtTime(0, resumeTime);
+                    delayFeedback.gain.linearRampToValueAtTime(0.35, resumeTime + 3.0);
+                }
+                if (reverbInputGain && isReverbOn) {
+                    reverbInputGain.gain.cancelScheduledValues(resumeTime);
+                    reverbInputGain.gain.setValueAtTime(0, resumeTime);
+                    reverbInputGain.gain.linearRampToValueAtTime(1.0, resumeTime + 3.0);
+                }
+
+                isGenerating = false;
+            }, 1500); // Sistemin tam sessizliğe kavuşması için bekleme süresi
+        }
+
+        function triggerGenerationInner() {
+            initAudio();
+
+            // Random root note offset
+            rootMidiOffset = Math.floor(Math.random() * 12) - 5;
+
+            const mkList = Object.keys(CALM_SCALES);
             const anaMakam = mkList[Math.floor(Math.random() * mkList.length)];
             const usulList = Object.keys(USULLER);
             const anaUsul = usulList[Math.floor(Math.random() * usulList.length)];
@@ -468,57 +715,122 @@
             document.getElementById('bpmValue').textContent = bpm;
             if (delayNode) delayNode.delayTime.setTargetAtTime((60 / bpm) * 0.75, audioCtx.currentTime, 0.1);
 
+            // Generate Zen Ambient Pad Patch parameters
+            // Introduce 'square' and 'sawtooth' for rich PWM body, but filter will keep it calm
+            const oscTypes1 = ['sine', 'triangle', 'square', 'sawtooth'];
+            const oscTypes2 = ['sine', 'triangle'];
+            padPatch.osc1Type = oscTypes1[Math.floor(Math.random() * oscTypes1.length)];
+            padPatch.osc2Type = oscTypes2[Math.floor(Math.random() * oscTypes2.length)];
+            padPatch.subDivisor = Math.random() > 0.5 ? 2.0 : 1.0;
+            padPatch.detuneCents = (Math.random() * 15) - 7.5; // More chorus spread
+            padPatch.filterBase = 150 + Math.random() * 250; // Deep cutoff, up to 400
+            padPatch.filterEnvMod = Math.random() * 150;
+            padPatch.attackTime = 0.1 + Math.random() * 3.0; // Sometimes fast, sometimes slow
+            padPatch.releaseTime = 3.0 + Math.random() * 4.0;
+
+            // BPM sync LFOs -> Faster subdivisions available
+            const beatDuration = 60 / bpm;
+            const lfoDivisions = [0.5, 1, 2, 4]; // 2 bars, 1 bar, half, quarter
+            const fastLfoDivs = [2, 4, 8, 16]; // Half, quarter, eighth, sixteenth
+
+            padPatch.tremoloFreq = 1 / (beatDuration * lfoDivisions[Math.floor(Math.random() * lfoDivisions.length)]);
+            padPatch.tremoloDepth = Math.random() * 0.3;
+
+            padPatch.vibratoFreq = 1 / (beatDuration * lfoDivisions[Math.floor(Math.random() * lfoDivisions.length)]);
+            padPatch.vibratoDepth = Math.random() * 15;
+
+            padPatch.filterLfoFreq = 1 / (beatDuration * fastLfoDivs[Math.floor(Math.random() * fastLfoDivs.length)]);
+            padPatch.filterLfoDepth = Math.random() * 400; // Modulation in cents (up to 4 semitones pulse)
+
+            // Randomize Pluck Variations
+            pluckPatch.filterFreq = 800 + Math.random() * 3200; // 800 (dull) to 4000 (bright)
+            pluckPatch.tensionGain = 1.0 + Math.random() * 4.0; // soft to hard snap
+            pluckPatch.decayScale = 0.5 + Math.random() * 1.5; // short mute to long ring
+            pluckPatch.noiseDecay = 0.02 + Math.random() * 0.06;
+
             const tempoFactor = parseInt(bpm) / 120;
             const density = Math.max(0.25, Math.min(0.75, 0.75 - (tempoFactor - 0.5) * 0.4));
 
             Object.keys(blocks).forEach(key => {
-                if (key === 'B2') return;
                 const b = blocks[key];
                 b.usul = anaUsul;
                 const uLen = USULLER[anaUsul].len;
-                b.numSteps = uLen * (uLen > 8 ? 2 : 4);
-
-                if (key === 'C') { b.makam = MEYAN_MAPPING[anaMakam] || anaMakam; b.octaveShift = true; }
-                else { b.makam = anaMakam; b.octaveShift = false; }
-
-                let lastDeg = null;
-                for (let i = 0; i < b.numSteps; i++) {
-                    const usulW = USULLER[b.usul].weights[i % USULLER[b.usul].len];
-                    b.steps[i].importance = Math.random() * usulW;
-                    b.steps[i].active = (i === 0) ? true : (b.steps[i].importance > (1.2 - density));
-                    if (b.steps[i].active) {
-                        b.steps[i].degree = getDegreeWithSeyir(i, b.numSteps, b.seyir, b.makam, lastDeg, b.usul);
-                        lastDeg = b.steps[i].degree;
-                    }
-                }
+                b.numSteps = uLen * 16;
+                b.makam = anaMakam;
+                b.octaveShift = false;
             });
 
-            // B2 Logic
-            const bBlock = blocks['B'];
-            const b2Block = blocks['B2'];
-            b2Block.usul = bBlock.usul; b2Block.numSteps = bBlock.numSteps;
-            b2Block.makam = bBlock.makam; b2Block.octaveShift = bBlock.octaveShift;
-            for (let i = 0; i < bBlock.numSteps; i++) b2Block.steps[i] = JSON.parse(JSON.stringify(bBlock.steps[i]));
-            
-            const cadenceChunk = Math.min(4, Math.floor(b2Block.numSteps * 0.2));
-            let cadenceLastDeg = (b2Block.numSteps - cadenceChunk - 1 >= 0) ? b2Block.steps[b2Block.numSteps - cadenceChunk - 1].degree : null;
-            for (let i = b2Block.numSteps - cadenceChunk; i < b2Block.numSteps; i++) {
-                b2Block.steps[i].active = true; b2Block.steps[i].importance = 2.0;
-                b2Block.steps[i].degree = getDegreeWithSeyir(i, b2Block.numSteps, "inici", b2Block.makam, cadenceLastDeg, b2Block.usul);
-                cadenceLastDeg = b2Block.steps[i].degree;
-            }
+
+            let rootNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+            let exactRootIndex = (45 + rootMidiOffset) % 12; // 45 -> 9 -> A
+            if (exactRootIndex < 0) exactRootIndex += 12; // safety
+            let rootNameStr = rootNames[exactRootIndex];
+
+            console.log(`\n--- NEW PHRASE GENERATED ---`);
+            console.log(`Scale: ${rootNameStr} ${anaMakam} (Offset: ${rootMidiOffset})`);
+            console.log(`Usul: ${anaUsul}`);
+            console.log(`Tempo: ${bpm} BPM`);
+            console.log(`Pad Patch:`);
+            console.log(`  Oscillators: ${padPatch.osc1Type} + ${padPatch.osc2Type} (sub /${padPatch.subDivisor})`);
+            console.log(`  Filter: ${Math.round(padPatch.filterBase)}Hz (env: +${Math.round(padPatch.filterEnvMod)}Hz)`);
+            console.log(`  Filter LFO: ${Math.round(padPatch.filterLfoDepth)}cts @ ${padPatch.filterLfoFreq.toFixed(2)}Hz`);
+            console.log(`  Envelope: ATK ${padPatch.attackTime.toFixed(1)}s -> REL ${padPatch.releaseTime.toFixed(1)}s`);
+            console.log(`  Modulation: Tremolo ${padPatch.tremoloFreq.toFixed(2)}Hz, Vibrato ${padPatch.vibratoFreq.toFixed(2)}Hz`);
+            console.log(`----------------------------\n`);
         }
 
         // SCHEDULER
+        let arpLastDegree = null;
+
         function scheduler() {
             while (nextNoteTime < audioCtx.currentTime + 0.1) {
                 const b = blocks[formStructure[playbackFormIndex]];
-                const step = b.steps[playbackStepIndex];
-                if (step.active) {
-                    const p = getPitchData(step.degree, b.makam, b.octaveShift);
-                    playPluck(p.freq, nextNoteTime);
-                    // visual feedback for played key
-                    triggerKeyVisual(step.degree, nextNoteTime - audioCtx.currentTime);
+                let step = b.steps[playbackStepIndex];
+
+                // Arpeggiator / Live Input Logic
+                if (activeSwipeKey !== null) {
+                    // Generate a new note based on the held key
+                    let newDegree = getDegreeWithSeyir(playbackStepIndex, b.numSteps, "otomatik", b.makam, arpLastDegree, b.usul);
+                    // Bias heavily towards the held key to feel responsive
+                    if (Math.random() > 0.4) newDegree = activeSwipeKey;
+
+                    if (isRecording) {
+                        step.active = true;
+                        step.degree = newDegree;
+                    }
+
+                    // Play the live arpeggiated note
+                    const p = getPitchData(newDegree, b.makam, b.octaveShift);
+                    playPluck(p.freq, nextNoteTime, null);
+                    triggerKeyVisual(newDegree, nextNoteTime - audioCtx.currentTime);
+                    arpLastDegree = newDegree;
+                } else {
+                    arpLastDegree = null;
+                    // Playback recorded step
+                    if (step.active) {
+                        const p = getPitchData(step.degree, b.makam, b.octaveShift);
+                        playPluck(p.freq, nextNoteTime, null);
+                        triggerKeyVisual(step.degree, nextNoteTime - audioCtx.currentTime);
+                    }
+                }
+
+                // Playback Pad Layer
+                if (!isRecording) {
+                    if (step.padEvent === 'start') {
+                        // CHOKE ALL PREVIOUS LOOPING PADS to prevent orphaned drones!
+                        Object.keys(loopingPadReleases).forEach(k => {
+                            if (loopingPadReleases[k]) loopingPadReleases[k]();
+                        });
+                        loopingPadReleases = {};
+
+                        const p = getPitchData(step.padDegree, b.makam, b.octaveShift);
+                        loopingPadReleases[step.padDegree] = playPad(p.freq, nextNoteTime);
+                    } else if (step.padEvent === 'release') {
+                        if (loopingPadReleases[step.padDegree]) {
+                            loopingPadReleases[step.padDegree]();
+                            delete loopingPadReleases[step.padDegree];
+                        }
+                    }
                 }
 
                 const usul = USULLER[b.usul];
@@ -527,11 +839,11 @@
                     playDrum(uChar, nextNoteTime);
                 }
 
-                nextNoteTime += (60 / parseInt(bpm)) / 4; 
+                nextNoteTime += (60 / parseInt(bpm)) / 4;
                 playbackStepIndex++;
-                if (playbackStepIndex >= b.numSteps) { 
-                    playbackStepIndex = 0; 
-                    playbackFormIndex = (playbackFormIndex + 1) % formStructure.length; 
+                if (playbackStepIndex >= b.numSteps) {
+                    playbackStepIndex = 0;
+                    playbackFormIndex = (playbackFormIndex + 1) % formStructure.length;
                 }
             }
             timerID = setTimeout(scheduler, 25);
@@ -539,7 +851,7 @@
 
         function triggerKeyVisual(degree, delaySec) {
             setTimeout(() => {
-                if(keysElements[degree]) {
+                if (keysElements[degree]) {
                     keysElements[degree].classList.add('active');
                     setTimeout(() => keysElements[degree].classList.remove('active'), 150);
                 }
@@ -548,40 +860,85 @@
 
         // KEYBOARD UI
         let activeSwipeKey = null;
+        let activePadReleases = {};
+
+        function releaseKey(degree) {
+            if (activePadReleases[degree]) {
+                activePadReleases[degree].releaseSound();
+
+                if (isRecording && playbackStepIndex !== null) {
+                    const currentBlockId = formStructure[playbackFormIndex];
+                    const b = blocks[currentBlockId];
+                    b.steps[playbackStepIndex].padEvent = 'release';
+                    b.steps[playbackStepIndex].padDegree = degree;
+                }
+
+                const timeSincePress = performance.now() - activePadReleases[degree].pressTime;
+                if (timeSincePress < 100) {
+                    setTimeout(() => {
+                        if (activeSwipeKey !== degree && keysElements[degree]) {
+                            keysElements[degree].classList.remove('active');
+                        }
+                    }, 100 - timeSincePress);
+                } else {
+                    if (keysElements[degree]) keysElements[degree].classList.remove('active');
+                }
+
+                delete activePadReleases[degree];
+            }
+        }
 
         function createKeyboard() {
             const container = document.getElementById('keyboard-container');
             container.innerHTML = '';
             keysElements = [];
-            
-            // Generate 15 keys for the SCALE_LENGTH
-            for(let i=0; i<SCALE_LENGTH; i++) {
+
+            // Generate keys for the SCALE_LENGTH
+            for (let i = 0; i < SCALE_LENGTH; i++) {
                 const bar = document.createElement('div');
                 bar.className = 'headlight-bar';
                 bar.dataset.degree = i;
-                
+
+                const centerIdx = Math.floor(SCALE_LENGTH / 2);
+
                 // Add skew for the lion claw effect
-                if (i < 7) bar.classList.add('bar-left');
-                else if (i === 7) bar.classList.add('bar-center');
+                if (i < centerIdx) bar.classList.add('bar-left');
+                else if (i === centerIdx) bar.classList.add('bar-center');
                 else bar.classList.add('bar-right');
 
                 // Arranged to fill vertical space smoothly.
                 // Middle shorter, edges taller
-                const distFromCenter = Math.abs(i - 7);
-                const heightScale = 50 + (distFromCenter / 7) * 45; 
+                const distFromCenter = Math.abs(i - centerIdx);
+                const heightScale = 50 + (distFromCenter / centerIdx) * 45;
                 bar.style.height = `${heightScale}%`;
 
-                bar.addEventListener('mousedown', (e) => { activeSwipeKey = i; pressKey(i); });
-                bar.addEventListener('touchstart', (e) => { e.preventDefault(); activeSwipeKey = i; pressKey(i); });
-                
+                bar.addEventListener('mousedown', (e) => {
+                    if (activeSwipeKey !== null && activeSwipeKey !== i) releaseKey(activeSwipeKey);
+                    activeSwipeKey = i;
+                    pressKey(i);
+                });
+                bar.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (activeSwipeKey !== null && activeSwipeKey !== i) releaseKey(activeSwipeKey);
+                    activeSwipeKey = i;
+                    pressKey(i);
+                });
+
                 container.appendChild(bar);
                 keysElements.push(bar);
             }
 
-            container.addEventListener('touchmove', handlePointerMove, {passive: false});
+            container.addEventListener('touchmove', handlePointerMove, { passive: false });
             container.addEventListener('mousemove', handlePointerMove);
-            window.addEventListener('touchend', () => activeSwipeKey = null);
-            window.addEventListener('mouseup', () => activeSwipeKey = null);
+
+            const handleInteractEnd = () => {
+                if (activeSwipeKey !== null) {
+                    releaseKey(activeSwipeKey);
+                    activeSwipeKey = null;
+                }
+            };
+            window.addEventListener('touchend', handleInteractEnd);
+            window.addEventListener('mouseup', handleInteractEnd);
         }
 
         function handlePointerMove(e) {
@@ -593,10 +950,20 @@
                 if (el && el.classList.contains('headlight-bar')) {
                     const degree = parseInt(el.dataset.degree);
                     if (degree !== activeSwipeKey) {
+                        if (activeSwipeKey !== null) releaseKey(activeSwipeKey);
                         activeSwipeKey = degree;
                         pressKey(degree);
                     }
                 } else {
+                    if (activeSwipeKey !== null) {
+                        releaseKey(activeSwipeKey);
+                        activeSwipeKey = null;
+                    }
+                }
+            } else {
+                // Not pressing anymore
+                if (activeSwipeKey !== null) {
+                    releaseKey(activeSwipeKey);
                     activeSwipeKey = null;
                 }
             }
@@ -607,11 +974,22 @@
             const currentBlockId = formStructure[playbackFormIndex];
             const b = blocks[currentBlockId]; // Context from playing track or fallback
             const p = getPitchData(degree, b.makam, b.octaveShift);
-            
-            playPad(p.freq, audioCtx.currentTime); // Pad sound for user interaction
+
+            if (isRecording && playbackStepIndex !== null) {
+                b.steps[playbackStepIndex].padEvent = 'start';
+                b.steps[playbackStepIndex].padDegree = degree;
+            }
+
+            if (activePadReleases[degree]) activePadReleases[degree].releaseSound();
+
+            const releaseFn = playPad(p.freq, audioCtx.currentTime); // Pad sound for user interaction
+
+            activePadReleases[degree] = {
+                releaseSound: releaseFn,
+                pressTime: performance.now()
+            };
 
             keysElements[degree].classList.add('active');
-            setTimeout(() => keysElements[degree].classList.remove('active'), 250);
         }
 
         // EVENTS
@@ -631,8 +1009,12 @@
             document.getElementById('overlay').style.display = 'none';
             initAudio();
             createKeyboard();
-            // Generate a random seed
-            triggerGeneration();
+
+            // Generate a seed but clear out the notes so slate is clean
+            triggerGenerationInner();
+            Object.keys(blocks).forEach(key => {
+                blocks[key].steps.forEach(s => { s.active = false; s.degree = 0; s.padEvent = null; s.padDegree = null; });
+            });
         });
 
         document.getElementById('playBtn').onclick = () => {
@@ -651,10 +1033,35 @@
             clearTimeout(timerID);
             document.getElementById('playBtn').classList.remove('active');
             document.getElementById('stopBtn').classList.add('active');
+
+            // Reset to beginning
+            playbackFormIndex = 0;
+            playbackStepIndex = 0;
+        };
+
+        document.getElementById('recBtn').onclick = (e) => {
+            isRecording = !isRecording;
+            e.target.style.background = isRecording ? "rgba(255, 68, 68, 0.2)" : "transparent";
+            e.target.style.color = isRecording ? "#ffffff" : "#ff4444";
         };
 
         document.getElementById('genBtn').onclick = () => {
-            triggerGeneration();
+            triggerGenerationInner();
+            // Instantly choke any stuck pads so the generative switch is quiet
+            Object.keys(loopingPadReleases).forEach(k => {
+                if (loopingPadReleases[k]) loopingPadReleases[k]();
+            });
+            loopingPadReleases = {};
+        };
+
+        document.getElementById('clearBtn').onclick = () => {
+            Object.keys(blocks).forEach(key => {
+                blocks[key].steps.forEach(s => { s.active = false; s.degree = 0; s.padEvent = null; s.padDegree = null; });
+            });
+            Object.keys(loopingPadReleases).forEach(k => {
+                if (loopingPadReleases[k]) loopingPadReleases[k]();
+            });
+            loopingPadReleases = {};
             keysElements.forEach(k => {
                 k.classList.add('active');
                 setTimeout(() => k.classList.remove('active'), 300);
@@ -670,23 +1077,36 @@
         document.getElementById('delayBtn').onclick = (e) => {
             initAudio();
             isDelayOn = !isDelayOn;
-            delayInputGain.gain.value = isDelayOn ? 1 : 0;
-            e.target.classList.toggle('active', isDelayOn);
+            delayInputGain.gain.setTargetAtTime(isDelayOn ? 1 : 0, audioCtx.currentTime, 0.05);
+            e.currentTarget.classList.toggle('active', isDelayOn);
         };
 
         document.getElementById('reverbBtn').onclick = (e) => {
             initAudio();
             isReverbOn = !isReverbOn;
-            reverbInputGain.gain.value = isReverbOn ? 1 : 0;
-            e.target.classList.toggle('active', isReverbOn);
+            reverbInputGain.gain.setTargetAtTime(isReverbOn ? 1 : 0, audioCtx.currentTime, 0.05);
+            e.currentTarget.classList.toggle('active', isReverbOn);
         };
 
         document.getElementById('drumsBtn').onclick = (e) => {
             initAudio();
             isDrumsOn = !isDrumsOn;
-            e.target.classList.toggle('active', isDrumsOn);
+            e.currentTarget.classList.toggle('active', isDrumsOn);
+        };
+
+        document.getElementById('pluckBtn').onclick = (e) => {
+            initAudio();
+            isPluckOn = !isPluckOn;
+            e.currentTarget.classList.toggle('active', isPluckOn);
+        };
+
+        document.getElementById('padBtn').onclick = (e) => {
+            initAudio();
+            isPadOn = !isPadOn;
+            e.currentTarget.classList.toggle('active', isPadOn);
         };
 
     </script>
 </body>
+
 </html>
